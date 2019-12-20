@@ -1,0 +1,1082 @@
+//// check out redesign mobile menu
+
+<!DOCTYPE html>
+<html lang="{{ locale }}" dir="{{ direction }}" class="{{ checkout_html_classes }}">
+  <head>
+{% include 'epica-pixel' %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, user-scalable=0">
+    <meta name="referrer" content="origin">
+
+    <title>{{ page_title }}</title>
+	{{ content_for_header }}
+	{{ checkout_stylesheets }}
+    {{ checkout_scripts }}
+    {{ 'page_checkout.scss' | asset_url | stylesheet_tag }}
+    <link rel="stylesheet" href="{{'default.css' | asset_url}}">
+    
+    <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-5WWZNV5');</script>
+<!-- End Google Tag Manager -->
+    
+  </head>
+  <body>
+    
+    <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5WWZNV5"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+    
+    {{ skip_to_content_link }}
+
+    <div class="banner" data-header>
+      <div class="wrap">
+        {{ content_for_logo }}
+      </div>
+    </div>
+
+    {{ order_summary_toggle }}
+
+    <div class="content" data-content>
+      <div class="wrap">
+        <div class="main page-checkout" role="main">
+          <div class="main__header">
+            {{ content_for_logo }}
+            {{ breadcrumb }}
+          </div>
+          
+          <div class="main__content">
+            {%unless page_title contains "Thank you" %}
+            <input type="hidden" name="custom_page" value="{{page_title}}" />
+            <div class="Delivery-Information pick grid__item hide">
+              <h2>You are getting your Order:</h2>
+              <div class="delivery_option1"><h3 class="option1"></h3></div>
+              <div class="delivery_option3"><span>Delivery Location: <span class="option3"></span></span></div>
+              <div class="delivery_option4"><span>Order Delivery Date: <span class="option4"></span></span></div>  
+              <div class="delivery_option5"><span>Order Timeframe: <span class="option5"></span></span></div>
+              <div class="btn_edit"><a href="javascript:void(0);" class="edit_shipping btn_information">Edit Delivery Option</a></div>
+            </div>
+            <div class="ship_options_main hide">
+              {% section 'pickup_heading' %}
+              <div class="pick">
+                {% section 'pickup-location' %}
+              </div>
+              <div class="shipping_checkout">
+                {% include 'shipping_option_checkout' %}
+              </div>
+            </div>
+            {%if page_title contains "Information" %}
+            <div class="extra_notes grid__item">
+              <div class="pickup_heading">Order Notes</div>
+              <textarea rows = "5" cols = "50" name = "note" placeholder="Kindly write any Instructions or Comments for your order" class="order_notes">
+              </textarea>
+              <a href="javascript:void(0);" class="btn confirm_notes" style="margin-top: 20px">Save Note</a>
+            </div>
+            {%endif%}
+            {%endunless%}
+            
+            <div class="alternative_payment_methods">
+              {{ alternative_payment_methods }}
+            </div>
+        {{ content_for_layout }}
+<epica></epica>
+          </div>
+          <div class="main__footer">
+            {{ content_for_footer }}
+          </div>
+        </div>
+        <div class="sidebar" role="complementary">
+          <div class="sidebar__header">
+            {{ content_for_logo }}
+          </div>
+          <div class="sidebar__content">
+            {{ content_for_order_summary }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="order-summary__scroll-indicator" id="on_checkout" aria-hidden="true" tabindex="-1">
+      Scroll for more
+      <svg aria-hidden="true" focusable="false" class="icon-svg icon-svg--size-12"> <use xlink:href="#down-arrow"></use> </svg>
+    </div>
+    {{ tracking_code }}
+  </body>
+</html>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="{{'picker.js' | asset_url}}"></script>
+<script src="{{'picker.date.js' | asset_url }}"></script>
+
+<script>
+ 
+  function removeAddons() {
+    $.ajax({
+      type: 'POST',
+      dataType: 'json',
+      url: '/cart/update.js',
+      data: {updates:{7267570843678:0}},
+      success: function(data){
+        $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: '/cart/update.js',
+          data: {updates:{7267570876446:0}},
+          success: function(data){
+            //checkCart();
+          }
+        });
+      }
+    });
+  }
+  
+  function removeOrder() {
+    $(".del_loc input[type=radio]").attr("checked", false);
+    $(".order-type input[type=radio]").attr("checked", false);
+    $(".store_pick input[type=radio]").attr("checked", false);
+    store_attr2='attributes[Order Type]=';
+    store_attr2+='&attributes[Order Delivery Date]=';
+    store_attr2+='&attributes[Delivery Location]=';
+    store_attr2+='&attributes[Order Timeframes]=';
+    store_attr2+='&attributes[delivery]=';
+    //store_attr2+='&attributes[Shipping Availability]=';
+    $.ajax({
+      type: 'POST',
+      url: '/cart/update.js',
+      dataType: 'json',
+      async:false,
+      data:store_attr2,
+      success: function(data) {
+        
+      }
+    }); 
+  }
+
+function deliveryInformation() {
+    $.ajax({
+      type: 'POST',
+      url: '/cart.js',
+      dataType: 'json',
+      success: function(data) {
+        if(data.attributes['Order Type']) {
+          if(data.attributes['Order Type'] == 'NOW (2 hr)' || data.attributes['Order Type'] == 'Same Day' || data.attributes['Order Type'] == 'Schedule') {
+            $('.option1').text('Local Delivery: '+data.attributes['Order Type']);
+          } else {
+            $('.option1').text(data.attributes['Order Type']);
+          }
+        } else {
+          $('.delivery_option1').addClass('hide'); 
+        }
+
+        if(data.attributes['Delivery Location']) {
+          if(data.attributes['Delivery Location'] == 'SampleRD') {
+            $('.option3').text('9813 W Sample Rd. Coral Springs, FL 33065 Phone: (954) 752-6290');
+          } else if(data.attributes['Delivery Location'] == 'CoralWay'){
+            $('.option3').text('2267 Coral Way. Miami, FL 33145 Phone: (786) 633-6179');
+          }
+          else {
+            $('.option3').text((data.attributes['Delivery Location']).replace("-","/"));
+          }
+        } else {
+          $('.delivery_option3').addClass('hide'); 
+        }
+
+        if(data.attributes['Order Delivery Date']) {
+          $('.option4').text(data.attributes['Order Delivery Date']);
+        } else {
+          $('.delivery_option4').addClass('hide'); 
+        }
+
+        if(data.attributes['Order Timeframes']) {
+          $('.option5').text(data.attributes['Order Timeframes']);
+        } else {
+          $('.delivery_option5').addClass('hide'); 
+        }
+
+        $('.Delivery-Information').removeClass('hide');
+        $('.ship_options_main').removeClass('show').addClass('hide');
+      }
+    }); 
+  }
+  
+  function beforeShipping() {
+    $('.ship_options_main').removeClass('hide');
+    $('.step[data-step]').hide();
+    $('button.step__footer__continue-btn').attr("disabled",true);
+    $('button.step__footer__continue-btn').text('Confirm Your Delivery Option');
+  }
+  
+  function checkCart() {
+    $.ajax({
+      type: 'POST',
+      url: '/cart.js',
+      dataType: 'json',
+      success: function(data) {
+        //checkShipAvail(data);
+        var extra = 0;
+        var discount = 0;
+        var total_price = data['total_price']/100;
+        $('.total-line--subtotal .order-summary__emphasis').html('$'+total_price);
+        if($('.total-line--taxes').length) {
+            if($('[data-checkout-total-taxes-target]')) {
+             extra = extra + parseFloat($('[data-checkout-total-taxes-target]').text().replace('$',''));
+            }
+          }
+          if($('.total-line--shipping').length) {
+            if(!$('[data-checkout-total-shipping-target=0]')) {
+              // nothing happens
+            } else {
+              var ship = $.trim($('[data-checkout-total-shipping-target]').text().replace('$',''));
+              if(ship == 'Free' || ship == 'Calculated at next step') {
+                //nothing happens
+              } else {
+                extra = extra + parseFloat(ship);
+              }
+            }
+          }
+        if($('.total-line--reduction').length) {
+         	var discount1 = $.trim($('[data-checkout-discount-amount-target]').text().replace('$',''));
+          	discount = discount1.replace('-','');
+        }
+        var all_total_price = total_price + parseFloat(extra) - parseFloat(discount);
+        all_total_price = all_total_price.toFixed(2);
+        $('.payment-due__price').html('$'+all_total_price);
+        $('.total-recap__final-price').html('$'+all_total_price);
+        
+        if(data.attributes['Order Type']) {
+          if(total_price <= 29.99) {
+            $('.step[data-step="contact_information"]').hide();
+            $('.alternative_payment_methods').hide();
+            $('button.step__footer__continue-btn').attr("disabled",true);
+      		$('button.step__footer__continue-btn').text('Minimum order is $30.');
+          } else {
+            $('.step[data-step]').show();
+            $('.alternative_payment_methods').show();
+            $('button.step__footer__continue-btn').attr("disabled",false);
+            $('button[data-trekkie-id="continue_to_shipping_method_button"]').text('Continue');
+            $('button[data-trekkie-id="complete_order_button"]').text('Complete order');
+            $('button[data-trekkie-id="continue_to_payment_method_button"]').text('Proceed to payment');
+          }
+        } else {
+        	$('.ship_options_main').removeClass('hide');
+    		$('.step[data-step]').hide();
+          	$('.alternative_payment_methods').hide();
+            $('button.step__footer__continue-btn').attr("disabled",true);
+      		$('button.step__footer__continue-btn').text('Confirm Your Delivery Option');
+          	$('#shopify-pay-modal').hide();
+        } 
+      }
+    });
+  }
+  
+  function removeAll() {
+    removeOrder();
+    window.location.reload(); 
+  }
+  
+  function btnChange(total_price) {
+    $('.edit_shipping').removeClass('hide').addClass('active');
+    $('.shipping_inner_options').hide();
+    deliveryInformation();
+    if(total_price <= 29.99) {
+      $('.step[data-step]').show();
+      $('button.step__footer__continue-btn').attr("disabled",true);
+      $('button.step__footer__continue-btn').text('Minimum order is $30.');
+    } else {
+      $('.step[data-step]').show();
+      $('button.step__footer__continue-btn').attr("disabled",false);
+      $('button[data-trekkie-id="continue_to_shipping_method_button"]').text('Continue');
+      $('button[data-trekkie-id="complete_order_button"]').text('Complete order');
+      $('button[data-trekkie-id="continue_to_payment_method_button"]').text('Proceed to payment');
+    }
+  }
+  
+  function biltoShip(type) {
+    $('.section--shipping-address h2').text('Customer Information');
+    $('[data-trekkie-id="breadcrumb_shipping_method_link"]').text('Delivery');
+  }
+  
+  function checkShipAvail(data) {
+    var proNames = '' , checkFlag = false;
+    $.each(data.items, function(index,value) {
+      if(value.properties) {
+        if(value.properties.Delivery_Message) {
+          if(checkFlag == true) {
+          	proNames += value.title;
+          } else {
+          	proNames += ', '+value.title;
+          }
+          checkFlag = true;
+        }
+      }
+    });
+    
+    if(proNames == '') {
+      var store_attr2 = '&attributes[Shipping Availability]=';
+    } else {
+      var store_attr2 = '&attributes[Shipping Availability]='+proNames+' will ship in 4 days';
+    }
+    
+    $.ajax({
+      type: 'POST',
+      url: '/cart/update.js',
+      dataType: 'json',
+      async:false,
+      data:store_attr2,
+      success: function(data) {
+        //console.log(data);
+      }
+    }); 
+  }
+  
+  
+  function reloadCart() {
+
+    $('.alternative-payment-separator span').text('OR Continue with Credit card');
+    if(window.location.href.indexOf('draftorder=true') > -1) {
+      $('.ship_options_main').remove();
+      var action = $('form.edit_checkout').attr('action');
+      $('form.edit_checkout').attr('action', action+'?draftorder=true');
+      var bread_link = $('a.breadcrumb__link').attr('href');
+      $('a.breadcrumb__link').attr('href', bread_link+'&draftorder=true');
+      var prev_link = $('a.step__footer__previous-link').attr('href');
+      $('a.step__footer__previous-link').attr('href', prev_link+'&draftorder=true');
+    } else {
+      $.ajax({
+        type: 'POST',
+        url: '/cart.js',
+        dataType: 'json',
+        success: function(data) {
+          var thanku_page = $('title').text();
+          if(data.item_count == 0){
+            if(thanku_page.indexOf('Thank you') > -1){
+              //nothing happens
+            }else{
+              window.location.replace('https://meatnbone.com');
+            }
+          } else {
+            checkShipAvail(data);
+            var extra = 0;
+            var discount = 0;
+            var total_price = data['total_price']/100;
+            $('.total-line--subtotal .order-summary__emphasis').html('$'+total_price);
+            if($('.total-line--taxes').length) {
+              if($('[data-checkout-total-taxes-target]')) {
+                extra = extra + parseFloat($('[data-checkout-total-taxes-target]').text().replace('$',''));
+              }
+            }
+            if($('.total-line--shipping').length) {
+              if(!$('[data-checkout-total-shipping-target=0]')) {
+                // nothing happens
+              } else {
+                var ship = $.trim($('[data-checkout-total-shipping-target]').text().replace('$',''));
+                if(ship == 'Free' || ship == 'Calculated at next step') {
+                  //nothing happens
+                } else {
+                  extra = extra + parseFloat(ship);
+                }
+              }
+            }
+            if($('.total-line--reduction').length) {
+              discount = $.trim($('[data-checkout-discount-amount-target]').text().replace('$',''));
+              discount = discount.replace('-','');
+            }
+            var all_total_price = total_price + parseFloat(extra) - parseFloat(discount);
+            all_total_price = all_total_price.toFixed(2);
+            $('.payment-due__price').html('$'+all_total_price);
+
+            if(data.attributes['Order Type']) {
+              var o_type = data.attributes['Order Type'];
+              var d_type = data.attributes['Delivery Location'];
+              var l_type = data.attributes['Order Type'];
+              biltoShip(o_type);
+              if(d_type == 'Miami-Dade/Broward') { 
+                removeAll();
+              } else {
+                if(o_type == 'NOW (2 hr)' || o_type == 'Same Day') {
+                  var info_shipping = $('[data-product-id="512167116830"]').length;
+                  if(info_shipping == 1) {
+                    var dt = new Date();
+                    var hour = dt.getHours();
+                    if(hour >= 0 &&  hour <=15) {
+                      $('#local_del_checkout').attr('checked', true);
+                      $('.del_loc').show();
+                      if(d_type == 'Miami Dade') {
+                        $('#Miami-Dade').attr('checked', true);
+                      }else if(d_type == 'Broward-Palm Beach'){
+                        $('#Broward').attr('checked', true);
+                      }
+                      $('.order-type').show();
+                      if(l_type == 'NOW (2 hr)'){
+                        $('#2hr').attr('checked', true);
+                      } else if(l_type == 'Same Day'){
+                        $('#same-day').attr('checked', true);
+                      }
+                      $('.Store').hide();
+                      $('.datepicker_outer').hide();
+                      $('.shipping_content[data-id="local"]').show();
+                      $('.alternative_payment_methods').show();
+                      var sel_val = $('select[name="shipping_option"] option[data-title="'+o_type+'"]').val();
+                      $('select[name="shipping_option"]').val(sel_val).change();
+                      $('textarea[name="note"]').val(data['note']);
+                      btnChange(total_price);
+                    } else {
+                      removeAddons();
+                    }
+                  } else {
+                    removeOrder();
+                    setTimeout(function() {
+                      $('.ship_options_main').removeClass('hide');
+                      $('.step[data-step]').hide();
+                    }, 1000);
+                  }
+                }
+                if(o_type == 'Schedule') {
+                  var d = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+                  var date_check = d.getTime();
+                  var date_attributes = new Date(data.attributes['Order Delivery Date']);
+                  date_attributes = date_attributes.getTime();
+                  if(date_check > date_attributes){
+                    //Nothing happend
+                    removeAll();
+                  } else {
+                    $('#local_del_checkout').attr('checked', true);
+                    $('.del_loc').show();
+                    if(d_type == 'Miami Dade') {
+                      $('#Miami-Dade').attr('checked', true);
+                    }else if(d_type == 'Broward-Palm Beach'){
+                      $('#Broward').attr('checked', true);
+                    }
+                    $('.order-type').show();
+                    $('#schedule').attr('checked', true);
+                    $('.datepicker_outer').show();
+                    $('.Store').hide();
+                    $('.shipping_content[data-id="local"]').show();
+                    $('.alternative_payment_methods').show();
+                    var sel_val = $('select[name="shipping_option"] option[data-title="'+o_type+'"]').val();
+                    $('input[value="'+data.attributes['Order Timeframes']+'"]').attr('checked', true);
+                    if(data.attributes['Order Delivery Date']) {
+                      $('input[name="attributes2[ORDER DELIVERY DATE]"]').val(data.attributes['Order Delivery Date']);
+                    } else {
+                      beforeShipping();
+                    }
+                    $('select[name="shipping_option"]').val(sel_val).change();
+                    $('textarea[name="note"]').val(data['note']);
+                    btnChange(total_price);
+                    $('[data-order-summary-section="line-items"]').append('<tr class="product shipping-product" data-product-id="512167116830ss" data-variant-id="7267570843678" data-product-type="Shipping" data-customer-ready-visible=""><td class="product__image"><div class="product-thumbnail"><div class="product-thumbnail__wrapper"><img alt="Schedule" class="product-thumbnail__image" src="//cdn.shopify.com/s/files/1/2633/6020/products/freight-icon-png-16_small.png?35031"></div><span class="product-thumbnail__quantity" aria-hidden="true">1</span></div></td><td class="product__description"><span class="product__description__name order-summary__emphasis">Shipping Selected</span><span class="product__description__variant order-summary__small-text">Schedule <br> Date:'+data.attributes['Order Delivery Date']+'<br> Time-Frame: '+data.attributes['Order Timeframes']+' </span></td><td class="product__quantity visually-hidden">1</td><td class="product__price"><span class="order-summary__emphasis">$0.00</span></td></tr>');             
+                  }
+                }
+                if(o_type == 'Store Pickup') {
+                  var d = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+                  var date_check = d.getTime();
+                  var date_attributes = new Date(data.attributes['Order Delivery Date']);
+                  date_attributes = date_attributes.getTime();
+                  if(date_check > date_attributes){
+                    removeAll();
+                  } else {
+                    $('#store_del_checkout').attr('checked', true);
+                    var str_loc = data.attributes['Delivery Location'];
+                    if(str_loc == 'Miami Dade') {
+                      $('#Miami-Dade').attr('checked', true);
+                    }else if(str_loc == 'Broward-Palm Beach'){
+                      $('#Broward').attr('checked', true);
+                    }
+
+                    $('.Store').show();
+                    $('.store_pick').show();
+                    $('#'+str_loc).attr('checked', true);
+                    $('.Local').hide();
+                    $('.datepicker_outer').hide();
+                    $('.shipping_content[data-id="store"]').show();
+                    $('.alternative_payment_methods').show();
+                    if(data.attributes['Order Delivery Date']) {
+                      $('input[name="attributes[Order Delivery Date]"]').val(data.attributes['Order Delivery Date']);
+
+                    } else {
+                      beforeShipping();
+                    }
+                    $('textarea[name="note"]').val(data['note']);
+                    btnChange(total_price);
+                    $('[data-order-summary-section="line-items"]').append('<tr class="product shipping-product" data-product-id="512167116830ss" data-variant-id="7267570843678" data-product-type="Shipping" data-customer-ready-visible=""><td class="product__image"><div class="product-thumbnail"><div class="product-thumbnail__wrapper"><img alt="Schedule" class="product-thumbnail__image" src="//cdn.shopify.com/s/files/1/2633/6020/products/freight-icon-png-16_small.png?35031"></div><span class="product-thumbnail__quantity" aria-hidden="true">1</span></div></td><td class="product__description"><span class="product__description__name order-summary__emphasis">Shipping Selected</span><span class="product__description__variant order-summary__small-text">Store Pickup <br> Date:'+data.attributes['Order Delivery Date']+' </span></td><td class="product__quantity visually-hidden">1</td><td class="product__price"><span class="order-summary__emphasis">$0.00</span></td></tr>');
+                  }
+                }
+                if(o_type == 'National Shipping'){
+                  $('#nat_del_checkout').attr('checked', true);
+                  $('.Store').hide();
+                  $('.Local').hide();
+                  $('.datepicker_outer').hide();
+                  $('.shipping_content[data-id="National_Shipping"]').show();
+                  $('.alternative_payment_methods').show();
+                  if(data['note'] == 'undefiend' || data['note'] == 'null'){
+                    //nothing happens 
+                  }
+                  else{
+                    $('textarea[name="note"]').val(data['note']);
+                  }
+                  btnChange(total_price); 
+                }
+              }
+            } else {
+              beforeShipping();
+              $('.alternative_payment_methods').hide();
+              $('#shopify-pay-modal').hide();
+            }
+          }
+        }
+      });
+    }
+  }
+	$("#datepicker4").change(function() {
+    var date =  $(this).val();
+    if(date == '') {
+    	beforeShipping();
+    } else {
+      var timeframe = $("input[name='attributes[Order Timeframes]']:checked").val();
+      var delivery_location_value = $("input[name='attributes[Delivery-Location]']:checked").val();
+      store_attr1='attributes[Order Type]=Schedule';
+      store_attr1 +='&attributes[Delivery Location]='+delivery_location_value;
+      store_attr1 +='&attributes[Order Delivery Date]='+date;
+      store_attr1 +='&attributes[Order Timeframes]='+timeframe;
+      $.ajax({
+        type: 'POST',
+        url: '/cart/update.js',
+        dataType: 'json',
+        async:false,
+        data:store_attr1,
+        success: function(data) {
+          removeAddons();
+        }
+      });
+    }
+  });
+  
+  //Store Pickup date
+  $("#datepicker3").change(function() {
+    var date = $(this).val();
+    var store_loc = $('input[name="attributes[Store Delivery-Location]"]:checked').val();
+    if(date == '') {
+    	beforeShipping();
+    } else {
+      store_attr='attributes[Order Type]=Store Pickup';
+      store_attr +='&attributes[Delivery Location]='+store_loc;
+      store_attr +='&attributes[Order Delivery Date]='+date;
+      store_attr +='&attributes[Order Timeframes]=';
+      $.ajax({
+        type: 'POST',
+        url: '/cart/update.js',
+        dataType: 'json',
+        async:false,
+        data:store_attr,
+        success: function(data) {
+          removeAddons();
+        }
+      });
+    }
+  });
+  $(document).ready(function(){
+	$('.edit_shipping').click(function(){
+      $('.Delivery-Information').addClass('hide');
+      $('.alternative_payment_methods').hide();
+      $('.step[data-step="shipping_method"]').hide();
+    });
+    
+    $('.btn_information').click(function(){
+      $('.ship_options_main').removeClass('hide');
+    });
+    
+    $('.breadcrumb li:nth-child(3) .breadcrumb__text').text('Delivery');
+    $('[data-trekkie-id="breadcrumb_shipping_method_link"]').text('Delivery');
+    $('[data-payment-form] #main-header').text('Delivery Method');
+    $('[data-product-type="Shipping"] .product__description__name').text('Delivery Selected');
+    $('[data-trekkie-id="continue_to_shipping_method_button"]').text('Continue');
+    
+    $('.confirm_shipping').on('click', function() {
+      setTimeout(function() {
+            window.location.reload();
+          }, 2000);
+    });
+	
+    $('.confirm_notes').click(function(){
+      var order_notes_info = $('textarea[name="note"]').val();
+      $.ajax({
+        type: 'POST',
+        url: '/cart/update.js',
+        dataType: 'json',
+        async:false,
+        data:{note: order_notes_info},
+        success: function(data) {
+			$('.confirm_notes').text('Saving....');
+          setTimeout(function(){
+            $('.confirm_notes').text('Save Notes');
+          }, 2000);
+        }
+      });
+    });
+    $('.edit_shipping').on('click', function() {
+      $('.edit_shipping').addClass('hide').removeClass('active');
+      $('.shipping_inner_options').show();
+    });
+
+    // Inventory: This product is not in stock
+    $('.product__description .product__description__property').each(function(){
+      var property_name = $.trim($(this).text());
+      if(property_name == 'Inventory: This product is not in stock') {
+        $(this).hide();
+      }
+    });
+
+    reloadCart();
+
+    $('[data-product-type="Shipping"]').addClass("shipping-product");
+
+    //for the timing of the Local Delivery option
+    var dt = new Date();
+    var hour = dt.getHours();
+
+    if(hour >= 0 &&  hour <=15) {
+      $('.same_class').parent('.radio-btn-del').show();
+    } else {
+      $('.same_class').parent('.radio-btn-del').hide();
+    }
+
+    if(hour >= 0 &&  hour <=15) {
+      $('.same_class2').parent('.radio-btn-del').show();
+    } else {
+      $('.same_class2').parent('.radio-btn-del').hide();
+    }
+    //End the timing of the Local Delivery option
+
+
+    
+
+    $("input[name='attributes[Order Type]']").click(function() {
+
+      var value = $("input[name='attributes[Order Type]']:checked").val();
+
+      biltoShip(value);
+
+      if(value) {
+
+        $("select[name='shipping_option']").val('select_option').change();
+        $('input[name="attributes[Order Delivery Date]"]').val('');
+        $('input[name="attributes2[ORDER DELIVERY DATE]"]').val('');
+
+        // National Shipping Attributes
+
+        var delivery1 = 'attributes[Order Type]='+value;
+
+        if(value == 'National Shipping') {
+          removeOrder();
+          $('.shipping_content').hide();
+          $('.shipping_content[data-id="National_Shipping"]').show();
+          $(".shipping_address").css('display','block');
+          $('.order-type').hide();
+          $('.del_loc').hide();
+          $('.store_pick').hide();
+          $('.Store').hide();
+          $('.datepicker_outer').hide();
+
+          $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: '/cart/update.js',
+            data: {updates:{7267570843678:0}},
+            success: function(data){
+              $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '/cart/update.js',
+                data: {updates:{7267570876446:0}},
+                success: function(data){
+                  $.ajax({
+                    type: 'POST',
+                    url: '/cart/update.js',
+                    dataType: 'json',
+                    async:false,
+                    data:delivery1,
+                    success: function(data) {
+                      //checkCart();
+                    }
+                  });
+                }
+              });
+            }
+          });
+
+        }
+
+
+        // Store Pickup Attributes
+        else if(value =='Store Pickup') {
+			removeOrder();
+          $('.shipping_content').hide();
+          $('.shipping_content[data-id="store"]').show();
+          $(".shipping_address").css('display','none');
+          $('.del_loc').hide();
+          $('.store_pick').show();
+          $('.order-type').hide();
+          $('.Store').hide();
+          $('.datepicker_outer').hide();
+
+          var store_date =  $('#datepicker3').val();
+
+          if(store_date == "") {
+            beforeShipping();
+          } else {
+            store_attr='attributes[Order Type]=Store Pickup';
+            store_attr +='&attributes[Delivery Location]=store';
+            store_attr +='&attributes[Order Delivery Date]='+store_date;
+            store_attr +='&attributes[Order Timeframes]=';
+            $.ajax({
+              type: 'POST',
+              url: '/cart/update.js',
+              dataType: 'json',
+              async:false,
+              data:store_attr,
+              success: function(data) {
+                removeAddons();
+              }
+            });
+          }
+
+        }
+
+
+        //Local Delivery Attributes
+        else if(value =='Local Delivery') {
+          removeOrder();
+          $('.shipping_content').hide();
+          $('.shipping_content[data-id="local"]').show();
+          $('.del_loc').show();
+          $('.store_pick').hide();
+          $('.Store').hide(); 
+          var radio_value = $('.order-type input[name="attributes[Local Order Type]"]:checked').val();
+          if(radio_value == '') {
+            beforeShipping();
+          } else {
+            checkCart();
+          }
+
+        }
+
+      }
+    });
+		$('input[name="attributes[Delivery-Location]"]').click(function(){
+      var location_value = $("input[name='attributes[Delivery-Location]']:checked").val();
+      if(location_value == ''){
+       //nothing happens 
+      } else {
+       	$('.order-type').show(); 
+        var store_attr12 ='attributes[Delivery Location]='+location_value;
+         $.ajax({
+            type: 'POST',
+            url: '/cart/update.js',
+            dataType: 'json',
+            async:false,
+            data:store_attr12,
+            success: function(data) {
+              //removeAddons();
+            }
+          });
+        
+      }
+    });
+    
+    //when i click on the order type option
+    
+    $('.order-type input[name="attributes[Local Order Type]"]').click(function(){
+      var order_type_value = $('.order-type input[name="attributes[Local Order Type]"]:checked').val();
+      var delivery_location_value = $("input[name='attributes[Delivery-Location]']:checked").val();
+      if(order_type_value == 'Schedule'){
+        $(".datepicker_outer").css('display','block');
+        $(".shipping_address").css('display','block');
+        var free_date =  $('#datepicker4').val();
+        if(free_date == "") {
+          beforeShipping();
+        } else if(free_date!= "") {
+          // Schedule already Selected
+          var timeframe = $("input[name='attributes[Order Timeframes]']:checked").val();
+          store_attr1='attributes[Order Type]=Schedule';
+          store_attr1 +='&attributes[Delivery Location]='+delivery_location_value;
+          store_attr1 +='&attributes[Order Delivery Date]='+free_date;
+          store_attr1 +='&attributes[Order Timeframes]='+timeframe;
+          $.ajax({
+            type: 'POST',
+            url: '/cart/update.js',
+            dataType: 'json',
+            async:false,
+            data:store_attr1,
+            success: function(data) {
+              removeAddons();
+            }
+          });
+          // Schedule already Selected
+        }
+      } else if(order_type_value == 'Same Day') {
+        $(".datepicker_outer").css('display','none');
+        $(".shipping_address").css('display','block');
+        store_attr_val='attributes[Order Type]=Same Day';
+        store_attr_val+='&attributes[Delivery Location]='+delivery_location_value;
+        store_attr_val+='&attributes[Order Delivery Date]=';
+        store_attr_val+='&attributes[Order Timeframes]=';
+        $.ajax({
+          type: 'POST',
+          url: '/cart/update.js',
+          dataType: 'json',
+          async:false,
+          data:store_attr_val,
+          success: function(data) {
+            //console.log(data);
+          }
+        });
+        $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: '/cart/update.js',
+          data: {updates:{7267570843678:0}},
+          success: function(data){
+            $.ajax({
+              type: 'POST',
+              dataType: 'json',
+              url: '/cart/update.js',
+              data: {updates:{7267570876446:0}},
+              success: function(data){
+                $.ajax({
+                  type: 'POST',
+                  url: '/cart/add.js',
+                  data: {
+                    quantity: 1,
+                    id: 7267570876446
+                  },
+                  dataType: 'json',           
+                  success: function(data) {
+
+                    //checkCart();
+                  }
+                });
+              }
+            });
+          }
+        });
+      }else if(order_type_value == 'NOW (2 hr)') {
+        $(".datepicker_outer").css('display','none');
+        $(".shipping_address").css('display','block');
+        store_attr2='attributes[Order Type]=NOW (2 hr)';
+        store_attr2+='&attributes[Delivery Location]='+delivery_location_value;
+        $.ajax({
+          type: 'POST',
+          url: '/cart/update.js',
+          dataType: 'json',
+          async:false,
+          data:store_attr2,
+          success: function(data) {
+            //console.log(data);
+          }
+        });
+        $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: '/cart/update.js',
+          data: {updates:{7267570876446:0}},
+          success: function(data){
+
+            $.ajax({
+              type: 'POST',
+              dataType: 'json',
+              url: '/cart/update.js',
+              data: {updates:{7267570843678:0}},
+              success: function(data){
+
+                $.ajax({
+                  type: 'POST',
+                  url: '/cart/add.js',
+                  data: {
+                    quantity: 1,
+                    id: 7267570843678
+                  },
+                  dataType: 'json',           
+                  success: function(data) {
+                    //checkCart();
+
+                  }
+                });
+              }
+            });
+          }
+        });
+
+      }
+    });
+    
+    
+    //when i click on the store location
+    
+    $('input[name="attributes[Store Delivery-Location]"]').click(function(){
+      	$('.Store').show();
+    });
+    var dt = new Date();
+    var hour = dt.getHours();
+    var weekday= new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+    var weekDay = weekday[dt.getDay()];
+    if(weekDay == 'Monday' || weekDay == 'Tuesday' || weekDay == 'Wednesday'){
+      if(hour > 17) { //time before 5
+        var time1 = new Date(new Date().setDate(new Date().getDate() + 1));
+      }
+      else {
+        var time1 = new Date().setDate(new Date().getDate());
+
+      }
+    }
+    else if(weekDay == 'Thursday' || weekDay == 'Friday' || weekDay == 'Saturday'){
+      if(hour > 18) { //time before 5
+        var time1 = new Date(new Date().setDate(new Date().getDate() + 1));
+      }
+      else {
+        var time1 = new Date().setDate(new Date().getDate());
+      }
+    }
+    else{
+      if(hour > 16) { //time before 5
+        var time1 = new Date(new Date().setDate(new Date().getDate() + 1));
+      }
+      else {
+        var time1 = new Date().setDate(new Date().getDate());
+      }
+    }
+
+
+
+    $('#datepicker3').pickadate({
+      formatSubmit: 'yyyy/mm/dd',
+      container: '#container3',
+      min: time1,
+      closeOnSelect: true,
+      closeOnClear: false,
+    });
+
+    $('#datepicker4').pickadate({
+      formatSubmit: 'yyyy/mm/dd',
+      min: new Date().getDay() + 1 - new Date().getDay(),
+      container: '#container3',
+      closeOnSelect: true,
+      closeOnClear: false,
+    });
+
+  });
+
+  function timeframe(val) {
+    var value = $('.order-type input[name="attributes[Local Order Type]"]:checked').val();
+    var date =  $('#datepicker4').val();
+    //$('.shipping-product').remove();
+    //$('[data-order-summary-section="line-items"]').append('<tr class="product shipping-product" data-product-id="512167116830ss" data-variant-id="7267570843678" data-product-type="Shipping" data-customer-ready-visible=""><td class="product__image"><div class="product-thumbnail"><div class="product-thumbnail__wrapper"><img alt="Schedule" class="product-thumbnail__image" src="//cdn.shopify.com/s/files/1/2633/6020/products/freight-icon-png-16_small.png?35031"></div><span class="product-thumbnail__quantity" aria-hidden="true">1</span></div></td><td class="product__description"><span class="product__description__name order-summary__emphasis">Shipping Selected</span><span class="product__description__variant order-summary__small-text">Schedule <br> Date: '+date+'<br> Time-Frame: '+val+' </span></td><td class="product__quantity visually-hidden">1</td><td class="product__price"><span class="order-summary__emphasis">$0.00</span></td></tr>');
+    store_attr1 = 'attributes[Order Type]='+value;
+    store_attr1 += '&attributes[Order Delivery Date]='+date;
+    store_attr1 += '&attributes[Order Timeframes]='+val;
+
+    $.ajax({
+      type: 'POST',
+      url: '/cart/update.js',
+      dataType: 'json',
+      async:false,
+      data:store_attr1,
+      success: function(data) {
+        //console.log(data);
+      }
+    });
+  }
+
+  //End Functionality of the shipping option
+</script>
+
+<script>
+  $(document).ready(function() {
+    
+    //Start Gift Option
+	
+    // on change Gift
+    $("#checkout-gift").click(function(){
+      if($(this).is(":checked")) {
+        $(".gift_next_step").removeClass('hide');
+        $("#edit-form-checkout").removeClass('hide').addClass('show');
+        $(this).attr('checked',true);
+      } else {
+        $(".gift_next_step").addClass('hide');
+       $("#edit-form-checkout").addClass('hide').removeClass('show');
+        $(this).attr('checked',false);
+        cart_attr1 ='attributes[Is this order a Gift?]=';
+        cart_attr1+='&attributes[From]=';
+        cart_attr1+='&attributes[To]=';
+        cart_attr1 +='&attributes[Message]=';
+        $.ajax({
+          type: 'POST',
+          url: '/cart/update.js',
+          dataType: 'json',
+          async:false,
+          data:cart_attr1,
+          success: function(data) {
+            //console.log(data);
+            $('.gift_options #from_checkout').val('');
+            $('.gift_options #to_checkout').val('');
+            $('.gift_options #message_checkout').val('');
+            $('#save_gift_message_checkout').text('SAVE MESSAGE');
+          }
+        
+      });
+               }
+    });
+  });
+    $('#save_gift_message_checkout').click(function(e) {
+      e.preventDefault();
+      var _this = $(this);
+      _this.text('SAVING...');
+      cart_attr1 ='attributes[Is this order a Gift?]='+$('.gift_options #checkout-gift').val();
+      cart_attr1+='&attributes[From]='+$('.gift_options #from_checkout').val();
+      cart_attr1+='&attributes[To]='+$('.gift_options #to_checkout').val();
+      cart_attr1 +='&attributes[Message]='+$('.gift_options #message_checkout').val();
+      $.ajax({
+        type: 'POST',
+        url: '/cart/update.js',
+        dataType: 'json',
+        async:false,
+        data:cart_attr1,
+        success: function(data) {
+          //console.log(data);
+          setTimeout(function(){ 
+            _this.text('SAVE MESSAGE');
+          }, 2000);
+          setTimeout(function(){
+            $('.gift_next_step').addClass('hide');
+            $('#edit-form-checkout').removeClass('hide').addClass('show');
+          }, 2500);
+        }
+      });
+    });
+    
+    $('#edit-form-checkout').click(function(e) {
+      e.preventDefault();
+      $(this).addClass('hide').removeClass('show');
+      $('.gift_next_step').removeClass('hide');
+    });
+    //End Gift Option
+
+  $('.order-summary__section').scroll(function() {
+    var windowpos = $('.order-summary__section').scrollTop();
+    if (windowpos <= 500) {
+      $(".order-summary__section").addClass("order-summary__section--has-scroll");
+    }
+  });
+  $(window).scroll(function() {
+    var windowpos = $(this).scrollTop();
+    if(windowpos >= 50) {
+      $("#on_checkout").addClass("hide");
+    }
+    else{
+      $("#on_checkout").removeClass("hide");
+    }
+  });
+
+</script>
